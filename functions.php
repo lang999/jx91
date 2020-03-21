@@ -1,8 +1,9 @@
 <?php
-ini_set('display_errors','off');//完全屏蔽错误
-error_reporting(0);//完全屏蔽错误
-//ini_set('display_errors','on');//打开错误提示
-//error_reporting(E_ALL & ~E_NOTICE);//打开错误提示
+session_start();
+//ini_set('display_errors','off');//完全屏蔽错误
+//error_reporting(0);//完全屏蔽错误
+ini_set('display_errors','on');//打开错误提示
+error_reporting(E_ALL & ~E_NOTICE);//打开错误提示
 #引入模块
 require_once ROOT.DIRECTORY_SEPARATOR.'lib/phpQuery.php';
 require_once ROOT.DIRECTORY_SEPARATOR.'lib/QueryList.php';
@@ -90,8 +91,20 @@ function getVideo($url){
     //用DOMXpath加载DOM，用于查询
     $xpath = new \DOMXPath($dom);
     $title=$xpath->query('//*[@id="viewvideo-title"]')->item(0)->textContent;
-//    $video=$xpath->query('//*[@id="player_one"]/script[1]')->item(0);//video
-    $video=$xpath->query('//*[@id="player_one"]/source')->item(0);//video
+    if(empty($_SESSION['md5']))
+    {
+        //没有加密
+        $video=$xpath->query('//*[@id="player_one"]/source')->item(0);//video
+        if(empty($video->ownerDocument))
+        {
+            $_SESSION['md5']=1;
+        }
+    }
+    if( $_SESSION['md5']==1){
+        //加密后
+        $video=$xpath->query('//*[@id="player_one"]/script[1]')->item(0);//video
+        $_SESSION['md5']=1;
+    }
 //    $info=$xpath->query('//*[@id="useraction"]/div[1]')->item(0);
     $video=$video->ownerDocument->saveHTML($video);
 //    var_dump($video);exit;
