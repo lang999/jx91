@@ -14,7 +14,7 @@ if(!$url){
     httpStatus(403);
 }
 $file=new \lib\cache\driver\File();
-$data=$file->get($url);
+//$data=$file->get($url);
 if(!$data){
     $url=$aes->decrypt(urldecode($url));
     if(!strstr($url,'http')){

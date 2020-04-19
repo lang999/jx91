@@ -3,7 +3,7 @@ session_start();
 //ini_set('display_errors','off');//完全屏蔽错误
 //error_reporting(0);//完全屏蔽错误
 ini_set('display_errors','on');//打开错误提示
-error_reporting(E_ALL & ~E_NOTICE);//打开错误提示
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);//打开错误提示
 #引入模块
 require_once ROOT.DIRECTORY_SEPARATOR.'lib/phpQuery.php';
 require_once ROOT.DIRECTORY_SEPARATOR.'lib/QueryList.php';
@@ -45,30 +45,31 @@ function getList($domain="http://www.91porn.com",$page = 1){
     $dom->normalize();
     //用DOMXpath加载DOM，用于查询
     $xpath = new \DOMXPath($dom);
-    $picList=$xpath->query('//*[@id="videobox"]/table/tr/td/div/div[1]/a/img/@src');
-    $titleList=$xpath->query('//*[@id="videobox"]/table/tr/td/div/div[1]/a/img/@title');//txt
-    $linkList=$xpath->query('//*[@id="videobox"]/table/tr/td/div/div[1]/a/@href');
-    $info2=$xpath->query('//*[@id="videobox"]/table/tr/td/div');
+    $picList=$xpath->query('//*[@id="wrapper"]/div[1]/div[3]/div/div/div/div/a/div/img/@src');////*[@id="wrapper"]/div[1]/div[3]/div/div/div[1]/div/a/div/img
+    $titleList=$xpath->query('//*[@id="wrapper"]/div[1]/div[3]/div/div/div/div/a/span');//txt
+    $linkList=$xpath->query('//*[@id="wrapper"]/div[1]/div[3]/div/div/div/div/a/@href');
+    $info2=$xpath->query('//*[@id="wrapper"]/div[1]/div[3]/div/div/div/div');
     for($i=0;$i<=$picList->length-1;$i++){
         $data[$i]['pic']=$picList->item($i)->nodeValue;
-        $data[$i]['title']=$titleList->item($i)->nodeValue;
+        $data[$i]['title']=$titleList->item($i)->textContent;
         $data[$i]['link']=$linkList->item($i)->nodeValue;
         $info3=$info2->item($i);
-        $info=$info3->ownerDocument->saveHTML($info3);
+//        $info=$info3->ownerDocument->saveHTML($info3);
+        $info=$info3->textContent;
         $info=preg_replace("/<\/?div[^>]*>/",'',$info);//去掉class=imagechannel的外围标签
         $info=preg_replace("/<\/?a[^>]*>/",'',$info);//去掉a外围标签
         $info=preg_replace("/<\/?img[^>]*>/",'',$info);//去掉img外围标签
         $info=preg_replace("/<\/?br[^>]*>/",'',$info);//去掉img外围标签
 //        $info=str_replace(array("\r\n","\r","\n","\t"),'<br/>',$info);
         $info=(trim($info));
-        $info=mb_substr($info,0,mb_strlen($info)-33);
-//        $info=trim($info,'<br>');
+//        $info=mb_substr($info,0,mb_strlen($info)-33);
+        $info=mb_strstr($info,'添加时间');
+//        $info=trim($info,'<br/>');
         $data[$i]['info']=nl2br($info);//去掉img外围标签
 //        $data[$i]['info']=str_replace(array("\r\n","\r","\n","\t"),'<br/>',$info);
         unset($info);
     }
 //	$data = \QL\QueryList::Query($html,$rules,'','','',true)->data;
-	//print_r($data);
 	return $data;
 }
 
@@ -90,7 +91,7 @@ function getVideo($url){
     $dom->normalize();
     //用DOMXpath加载DOM，用于查询
     $xpath = new \DOMXPath($dom);
-    $title=$xpath->query('//*[@id="viewvideo-title"]')->item(0)->textContent;
+    $title=$xpath->query('//*[@id="videodetails"]/h4')->item(0)->textContent;
     if(empty($_SESSION['md5']))
     {
         //没有加密
@@ -175,7 +176,7 @@ function fun_adm_each(&$array){
     }
     return $result;
 }
-echo fun_adm_count('');
+//echo fun_adm_count('');
 
 function fun_adm_count($array_or_countable,$mode = COUNT_NORMAL){
     if(is_array($array_or_countable) || is_object($array_or_countable)){
@@ -185,7 +186,8 @@ function fun_adm_count($array_or_countable,$mode = COUNT_NORMAL){
     }
 }
 
-function httpStatus($num){//网页返回码
+function httpStatus($num){
+    //网页返回码
     static $http = array (
         100 => "HTTP/1.1 100 Continue",
         101 => "HTTP/1.1 101 Switching Protocols",
@@ -337,4 +339,129 @@ function showImg($img){
     $getImgInfo = "image{$imgExt}";
     $getImgInfo($imgInfo, null, $quality); //2.将图像输出到浏览器或文件。如: imagepng ( resource $image )
     imagedestroy($imgInfo);
+}
+
+////获取 request headers
+function get_All_Headers()
+{
+    $headers = [];
+    foreach ($_SERVER as $name => $value)
+    {
+        if (substr($name, 0, 5) == 'HTTP_')
+        {
+            $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+        }
+    }
+    return $headers;
+}
+
+
+
+function curlMp4($url,$headers=[])
+{
+    $ch = curl_init();
+    curl_setopt($ch,CURLOPT_URL,$url);
+    $SSL = substr($url, 0, 8) == "https://" ? true : false;
+    if ($SSL) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 信任任何证书
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // 检查证书中是否设置域名
+    }
+
+    curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // 302 redirect
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 7); //HTTp定向级别
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);//6秒超时设置
+
+    if($headers){
+        curl_setopt($ch,CURLOPT_HTTPHEADER,$headers);
+        curl_setopt($ch, CURLOPT_REFERER, "http://91porn.com");//模拟来路
+    }else{
+        curl_setopt($ch,CURLOPT_HEADER,false);
+    }
+    curl_setopt($ch, CURLOPT_HEADER, true);
+
+    $result = curl_exec($ch);
+//    var_dump($result);
+    // 获得响应结果里的：头大小
+    $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    curl_close($ch);
+    // 根据头大小去获取头信息内容
+    $header = substr($result, 0, $headerSize);
+    $body=substr($result,$headerSize-1);
+    return ['header'=>$header,'data'=>$body];
+}
+
+function pathHeaders($headers)
+{
+    preg_match_all("/([^\r\n]*)/i", $headers, $matches);
+    if(empty($matches)){
+        return false;
+    }
+    return $matches[1];
+}
+
+//get请求
+function curl_get_with_head($url, $headers=[])
+{
+    $ch = curl_init();
+    curl_setopt($ch,CURLOPT_URL,$url);
+    $SSL = substr($url, 0, 8) == "https://" ? true : false;
+    if ($SSL) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 信任任何证书
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // 检查证书中是否设置域名
+    }
+
+    curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // 302 redirect
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 7); //HTTp定向级别
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);//6秒超时设置
+
+    if($headers){
+        curl_setopt($ch,CURLOPT_HTTPHEADER,$headers);
+        curl_setopt($ch, CURLOPT_REFERER, "http://91porn.com");//模拟来路
+    }else{
+        curl_setopt($ch,CURLOPT_HEADER,false);
+    }
+    curl_setopt($ch, CURLOPT_HEADER, true);
+
+    $result = curl_exec($ch);
+//    var_dump($result);
+    // 获得响应结果里的：头大小
+    $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    curl_close($ch);
+    // 根据头大小去获取头信息内容
+    $header = substr($result, 0, $headerSize);
+    $body=substr($result,$headerSize-1);
+    return ['header'=>$header,'data'=>$body];
+}
+//get请求获取body体
+function curl_get_with_body($url, $range)
+{
+    $curl = curl_init();
+
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "GET",
+        CURLOPT_POSTFIELDS => "",
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => array(
+            "Range: bytes={$range}"
+        ),
+    ));
+
+    $response = curl_exec($curl);
+    $err = curl_error($curl);
+    curl_close($curl);
+
+    if ($err) {
+        return "cURL Error #:" . $err;
+    } else {
+        return $response;
+    }
 }
