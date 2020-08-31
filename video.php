@@ -113,6 +113,7 @@ $video = $data;
                     },500);
                 }
             }
+            $("p.vjs-no-js").remove();
         </script>
         <span id="showSpan" style="display:none"></span>
     </body>
