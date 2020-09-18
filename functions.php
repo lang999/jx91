@@ -73,8 +73,18 @@ function getList($domain="http://www.91porn.com",$page = 1){
 	return $data;
 }
 
-function randIp(){
-    return rand(50,250).".".rand(50,250).".".rand(50,250).".".rand(50,250);
+function getIp(){ 
+    $onlineip=''; 
+    if(getenv('HTTP_CLIENT_IP')&&strcasecmp(getenv('HTTP_CLIENT_IP'),'unknown')){ 
+        $onlineip=getenv('HTTP_CLIENT_IP'); 
+    } elseif(getenv('HTTP_X_FORWARDED_FOR')&&strcasecmp(getenv('HTTP_X_FORWARDED_FOR'),'unknown')){ 
+        $onlineip=getenv('HTTP_X_FORWARDED_FOR'); 
+    } elseif(getenv('REMOTE_ADDR')&&strcasecmp(getenv('REMOTE_ADDR'),'unknown')){ 
+        $onlineip=getenv('REMOTE_ADDR'); 
+    } elseif(isset($_SERVER['REMOTE_ADDR'])&&$_SERVER['REMOTE_ADDR']&&strcasecmp($_SERVER['REMOTE_ADDR'],'unknown')){ 
+        $onlineip=$_SERVER['REMOTE_ADDR']; 
+    } 
+    return $onlineip; 
 }
 
 
@@ -122,7 +132,7 @@ function getVideo($url){
 
 function getHtml($url){
 
-    $ip = randIp();
+    $ip = getIp();
     $snoopy = new Snoopy;
     //添加koolshare的v2ray的http代理地址
     if(isset($proxy)){
