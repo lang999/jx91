@@ -2,7 +2,7 @@
 error_reporting(0);
 define('ROOT',__DIR__);
 require_once 'functions.php';
-!function_exists('getConfig')?$url="https://626.workarea3.live":$url="http://www.91porn.com";
+!function_exists('getConfig')?$url="https://403.workarea6.live":$url="http://n.t9k.space";
 $url91 = ($_COOKIE["91url"] == '' || stripos($_COOKIE["91url"],'http://') == 0) ? $url : $_COOKIE["91url"];
 //$page91 = $_COOKIE["91page"] == '' ? 1 : $_COOKIE["91page"];
 ?>
