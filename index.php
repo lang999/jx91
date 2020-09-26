@@ -15,10 +15,10 @@ if($domain == ''){
     $lang = file_get_contents("http://api.wipmania.com/");
     if (strstr(strtolower($lang),"cn")===false){
         //国外服务器，推荐域名
-        $domain='http://www.91porn.com';
+        $domain='http://n.t9k.space';
 }else{
         //国内服务器，推荐域名
-        $domain='https://626.workarea3.live';
+        $domain='https://403.workarea6.live';
     }
 }
 setcookie('91url',$domain);
