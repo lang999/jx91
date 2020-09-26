@@ -16,7 +16,7 @@ include_once ROOT.DIRECTORY_SEPARATOR.'config.php';
 
 $aes=new aes(isset($key)?$key:'hello_world');
 ini_set('memory_limit', '1024M');
-function getList($domain="http://www.91porn.com",$page = 1){
+function getList($domain="http://n.t9k.space",$page = 1){
     //video.php?category=hot&viewtype=basic 当前最热
     //video.php?category=rp&viewtype=basic 最近得分
     //video.php?category=long&viewtype=basic  十分钟以上
